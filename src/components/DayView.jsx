@@ -8,8 +8,8 @@ import ProgressPanel from './ProgressPanel';
 
 export default function DayView({
     day,
-    dateStr,       // ★ "YYYY-MM-DD" — 이 날짜의 일지
-    prevDateStr,   // ★ 같은 dayId를 사용한 직전 날짜 (과부하 비교용)
+    dateStr,
+    prevDateStr,
     getRoutine, updateRoutine, resetRoutine, isCustomized,
     getLog, updateSet,
 }) {
@@ -24,6 +24,22 @@ export default function DayView({
     };
     const updateEx = (updated) => updateRoutine(day.id, exercises.map(e => e.id === updated.id ? updated : e));
     const removeEx = (id) => updateRoutine(day.id, exercises.filter(e => e.id !== id));
+
+    // ── 순서 이동 ──────────────────────────────────────────────────────────
+    const moveEx = (id, dir) => {
+        const idx = exercises.findIndex(e => e.id === id);
+        if (dir === 'up' && idx > 0) {
+            const next = [...exercises];
+            [next[idx], next[idx - 1]] = [next[idx - 1], next[idx]];
+            updateRoutine(day.id, next);
+        }
+        if (dir === 'down' && idx < exercises.length - 1) {
+            const next = [...exercises];
+            [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+            updateRoutine(day.id, next);
+        }
+    };
+
     const totalSets = exercises.reduce((s, e) => s + e.sets, 0);
 
     // 휴식일
@@ -55,7 +71,7 @@ export default function DayView({
                         </div>
                         <h2 className="text-white font-bold text-xl">{day.label}</h2>
                         <p className="text-white/40 text-xs mt-0.5">
-                            {dateStr} · {exercises.length}개 종목 · {totalSets}총 세트
+                            {dateStr} · {exercises.length}개 종목 · 총 {totalSets}세트
                         </p>
                     </div>
                     {isCustomized(day.id) && (
@@ -67,12 +83,16 @@ export default function DayView({
                 </div>
 
                 {/* Exercise Cards */}
-                {exercises.map(ex => (
+                {exercises.map((ex, idx) => (
                     <ExerciseCard
                         key={ex.id} ex={ex} dayId={day.id}
                         dateStr={dateStr} prevDateStr={prevDateStr}
                         getLog={getLog} updateSet={updateSet} color={day.color}
                         onUpdateEx={updateEx} onRemove={() => removeEx(ex.id)}
+                        canMoveUp={idx > 0}
+                        canMoveDown={idx < exercises.length - 1}
+                        onMoveUp={() => moveEx(ex.id, 'up')}
+                        onMoveDown={() => moveEx(ex.id, 'down')}
                     />
                 ))}
 

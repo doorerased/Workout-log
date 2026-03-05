@@ -45,7 +45,14 @@ export default function CalendarView({ getDayType, setDayType, dayMap, onNavigat
     // ── 날짜 클릭 ─────────────────────────────────────────────────────────
     const handleDateClick = (dateNum) => {
         const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(dateNum).padStart(2, '0')}`;
-        setModal({ dateStr });
+        const existingDayId = getDayType(dateStr);
+        if (existingDayId) {
+            // 이미 루틴 지정된 날짜 → 팝업 없이 바로 이동
+            onNavigate({ dayId: existingDayId, dateStr });
+        } else {
+            // 미지정 날짜 → 팝업으로 루틴 선택
+            setModal({ dateStr });
+        }
     };
 
     // ── 팝업에서 타입 선택 ────────────────────────────────────────────────
