@@ -7,8 +7,12 @@ import DayView from './components/DayView';
 import CalendarView from './components/CalendarView';
 import DayTypeModal from './components/DayTypeModal';
 import AuthPage from './components/AuthPage';
+import SplashScreen from './components/SplashScreen';
 
 export default function App() {
+  // ── 스플래시 제어 ────────────────────────────────────────────────────
+  const [splashDone, setSplashDone] = useState(false);
+
   // ── 인증 ──────────────────────────────────────────────────────────────
   const {
     isLoggedIn, currentUser, hasAccount,
@@ -17,15 +21,18 @@ export default function App() {
     resetPassword, getAccountInfo, deleteAllData,
   } = useAuth();
 
-  // ── 로그인 / 비밀번호 재설정 / 전체 삭제 핸들러 ──────────────────────
-  // AuthPage의 onForgot은 두 가지 역할: 계정 정보 반환 / 'reset' 액션
   const handleForgot = useCallback(async (action, value) => {
-    if (!action) return getAccountInfo();           // 계정 정보 반환
+    if (!action) return getAccountInfo();
     if (action === 'reset') return resetPassword(value);
     if (action === 'deleteAll') { deleteAllData(); return; }
   }, [getAccountInfo, resetPassword, deleteAllData]);
 
-  // ── 미로그인 시 AuthPage 표시 ─────────────────────────────────────────
+  // ── 1단계: 스플래시 ───────────────────────────────────────────────────
+  if (!splashDone) {
+    return <SplashScreen onDone={() => setSplashDone(true)} />;
+  }
+
+  // ── 2단계: 로그인 ─────────────────────────────────────────────────────
   if (!isLoggedIn) {
     return (
       <AuthPage
@@ -38,7 +45,7 @@ export default function App() {
     );
   }
 
-  // ── 이하 메인 앱 (로그인 완료 상태) ──────────────────────────────────
+  // ── 3단계: 메인 앱 ───────────────────────────────────────────────────
   return <MainApp currentUser={currentUser} logout={logout} />;
 }
 

@@ -148,10 +148,12 @@ export default function AuthPage({ hasAccount, onLogin, onRegister, onForgot, on
             <div className="relative w-full max-w-sm animate-fade-in">
                 {/* 로고 */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-600/20 border border-violet-500/30 mb-4 text-3xl shadow-lg shadow-violet-500/10">
-                        🏋️
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl overflow-hidden mb-4 shadow-lg shadow-violet-500/20">
+                        <img src="/apexload_logo.png" alt="ApexLoad" className="w-full h-full object-cover" />
                     </div>
-                    <h1 className="text-white font-bold text-xl tracking-tight">PPL 운동 일지</h1>
+                    <h1 className="text-white font-black text-2xl tracking-tight">
+                        <span className="text-white">APEX</span><span className="text-violet-400">LOAD</span>
+                    </h1>
                     <p className="text-white/30 text-xs mt-1">{modeLabel[mode]}</p>
                 </div>
 
