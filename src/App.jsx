@@ -124,11 +124,15 @@ function MainApp({ currentUser, logout }) {
             <div className="text-center select-none">
               {view === 'journal' && currentEntry ? (
                 <>
-                  <p className="text-white font-bold text-sm tracking-tight">🏋️ PPL 운동 일지</p>
+                  <p className="font-black text-sm tracking-tight">
+                    <span className="text-white">Apex</span><span className="text-red-500">Load</span>
+                  </p>
                   <p className="text-white/35 text-xs mt-0.5">{currentEntry.dateStr}</p>
                 </>
               ) : (
-                <p className="text-white/60 font-bold text-sm">🏋️ 운동 캘린더</p>
+                <p className="font-black text-sm">
+                  <span className="text-white">Apex</span><span className="text-red-500">Load</span>
+                </p>
               )}
             </div>
 
@@ -147,10 +151,10 @@ function MainApp({ currentUser, logout }) {
 
           {/* 로그아웃 확인 드롭다운 */}
           {showLogoutConfirm && view === 'calendar' && (
-            <div className="absolute left-4 top-14 bg-surface-800 border border-white/10 rounded-2xl p-3 shadow-2xl z-50 flex flex-col gap-2 w-44">
+            <div className="absolute left-4 top-14 bg-surface-800 border border-white/8 rounded-2xl p-3 shadow-2xl z-50 flex flex-col gap-2 w-44">
               <p className="text-white/50 text-xs">로그아웃 하시겠어요?</p>
               <button onClick={() => { logout(); setShowLogoutConfirm(false); }}
-                className="w-full py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 text-xs font-bold transition-all">
+                className="w-full py-2 rounded-xl bg-red-600/15 hover:bg-red-600/25 text-red-400 text-xs font-bold transition-all">
                 로그아웃
               </button>
               <button onClick={() => setShowLogoutConfirm(false)}
