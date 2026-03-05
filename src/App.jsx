@@ -17,7 +17,7 @@ export default function App() {
   const {
     isLoggedIn, currentUser, hasAccount,
     register, login, logout,
-    verifyAdminCode,
+    setRecoveryCode,
     resetPassword, getAccountInfo, deleteAllData,
   } = useAuth();
 
@@ -40,7 +40,7 @@ export default function App() {
         onLogin={login}
         onRegister={register}
         onForgot={handleForgot}
-        onVerifyAdminCode={verifyAdminCode}
+        onSetRecoveryCode={setRecoveryCode}
       />
     );
   }
