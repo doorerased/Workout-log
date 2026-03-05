@@ -148,12 +148,9 @@ export default function ExerciseCard({
 
     return (
         <div className={`rounded-2xl border ${c.border} bg-surface-800 overflow-hidden animate-slide-up`}>
-            {/* Card Header */}
-            <div className="p-4 flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                    {editing ? (
+            {editing ? (
                         /* ── 편집 모드 ────────────────────────────────────────── */
-                        <div className="space-y-2">
+                        <div className="p-4 space-y-2">
                             {/* 종목명 */}
                             <input value={draft.name} onChange={e => setDraft(p => ({ ...p, name: e.target.value }))}
                                 title="종목명 수정"
@@ -208,47 +205,45 @@ export default function ExerciseCard({
                             </div>
                         </div>
                     ) : (
-                        /* ── 보기 모드 ────────────────────────────────────────── */
-                        <>
-                            <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${c.badge} ${c.text} font-medium`}>{tl.label}</span>
-                                <span className="text-white/30 text-xs">{ex.muscle}</span>
-                                <OverloadBadge current={currVol} prev={prevVol} />
+                        /* ── 보기 모드: 상단 가로 버튼 바 ──────────────────────── */
+                        <div className="p-4">
+                            {/* 1행: 뱃지 + 가로 버튼 */}
+                            <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${c.badge} ${c.text} font-medium`}>{tl.label}</span>
+                                    <span className="text-white/30 text-xs">{ex.muscle}</span>
+                                    <OverloadBadge current={currVol} prev={prevVol} />
+                                </div>
+                                {/* 가로 버튼 그룹 */}
+                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                    <button onClick={onMoveUp} disabled={!canMoveUp} title="위로 이동"
+                                        className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed">
+                                        <ArrowUp size={10} />
+                                    </button>
+                                    <button onClick={onMoveDown} disabled={!canMoveDown} title="아래로 이동"
+                                        className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed">
+                                        <ArrowDown size={10} />
+                                    </button>
+                                    <button onClick={openEdit} title="종목 편집"
+                                        className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all">
+                                        <Pencil size={10} />
+                                    </button>
+                                    <button onClick={onRemove} title="종목 삭제"
+                                        className="w-6 h-6 rounded-md bg-white/5 hover:bg-rose-500/20 flex items-center justify-center text-white/30 hover:text-rose-400 transition-all">
+                                        <Trash2 size={10} />
+                                    </button>
+                                    <button onClick={() => setExpanded(p => !p)} title={expanded ? '접기' : '펼치기'}
+                                        className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all">
+                                        <ChevronDown size={11} className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
+                                    </button>
+                                </div>
                             </div>
+                            {/* 2행: 종목명 + 세트 정보 */}
                             <h3 className="text-white font-semibold text-sm sm:text-base leading-snug">{ex.name}</h3>
                             <p className="text-white/35 text-xs mt-0.5">{ex.sets}세트 × {ex.reps}회 기준 · 완료 {done}/{ex.sets}</p>
-                        </>
+                        </div>
                     )}
-                </div>
 
-                {/* 우측 버튼 그룹 */}
-                {!editing && (
-                    <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                        {/* 위 아래 이동 */}
-                        <button onClick={onMoveUp} disabled={!canMoveUp} title="위로 이동"
-                            className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed">
-                            <ArrowUp size={10} />
-                        </button>
-                        <button onClick={onMoveDown} disabled={!canMoveDown} title="아래로 이동"
-                            className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed">
-                            <ArrowDown size={10} />
-                        </button>
-                        {/* 편집 / 삭제 / 접기 */}
-                        <button onClick={openEdit} title="종목 편집"
-                            className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all mt-1">
-                            <Pencil size={10} />
-                        </button>
-                        <button onClick={onRemove} title="종목 삭제"
-                            className="w-6 h-6 rounded-md bg-white/5 hover:bg-rose-500/20 flex items-center justify-center text-white/30 hover:text-rose-400 transition-all">
-                            <Trash2 size={10} />
-                        </button>
-                        <button onClick={() => setExpanded(p => !p)} title={expanded ? '접기' : '펼치기'}
-                            className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all">
-                            <ChevronDown size={11} className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
-                        </button>
-                    </div>
-                )}
-            </div>
 
             {/* Set Rows */}
             {expanded && !editing && (
