@@ -22,23 +22,26 @@ export function useAuth() {
     const currentUser = session?.username ?? null;
     const hasAccount = !!account;
 
-    // ── 회원가입 ──────────────────────────────────────────────────────────
-    const register = useCallback(async (username, password, hint) => {
+    // ── 회원가입 (adminCode 추가) ─────────────────────────────────────────
+    const register = useCallback(async (username, password, hint, adminCode) => {
         const trimmedId = username.trim();
         if (!trimmedId) return { ok: false, msg: '아이디를 입력해주세요.' };
         if (password.length < 4) return { ok: false, msg: '비밀번호는 4자 이상이어야 합니다.' };
+        if (!adminCode || adminCode.trim().length < 4)
+            return { ok: false, msg: '관리자 복구 코드는 4자 이상이어야 합니다.' };
 
         const passwordHash = await sha256(password);
+        const adminCodeHash = await sha256(adminCode.trim());
         const newAccount = {
             username: trimmedId,
             passwordHash,
+            adminCodeHash,      // ★ 관리자 복구 코드 해시 저장
             hint: hint.trim(),
             createdAt: new Date().toISOString(),
         };
         localStorage.setItem(ACCOUNT_KEY, JSON.stringify(newAccount));
         setAccount(newAccount);
 
-        // 가입 즉시 로그인
         const newSession = { username: trimmedId };
         localStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
         setSession(newSession);
@@ -63,6 +66,15 @@ export function useAuth() {
     const logout = useCallback(() => {
         localStorage.removeItem(SESSION_KEY);
         setSession(null);
+    }, []);
+
+    // ── 관리자 복구 코드 검증 ─────────────────────────────────────────────
+    const verifyAdminCode = useCallback(async (code) => {
+        const acc = loadJson(ACCOUNT_KEY);
+        if (!acc?.adminCodeHash) return { ok: false, msg: '등록된 복구 코드가 없습니다.' };
+        const hash = await sha256(code.trim());
+        if (acc.adminCodeHash !== hash) return { ok: false, msg: '복구 코드가 일치하지 않습니다.' };
+        return { ok: true };
     }, []);
 
     // ── 비밀번호 재설정 ───────────────────────────────────────────────────
@@ -96,6 +108,7 @@ export function useAuth() {
     return {
         isLoggedIn, currentUser, hasAccount,
         register, login, logout,
-        resetPassword, getAccountInfo, deleteAllData,
+        verifyAdminCode, resetPassword,
+        getAccountInfo, deleteAllData,
     };
 }

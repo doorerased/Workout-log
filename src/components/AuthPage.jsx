@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff, User, Lock, Lightbulb, ArrowLeft, AlertTriangle, CheckCircle2, KeyRound } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, Lightbulb, ArrowLeft, AlertTriangle, CheckCircle2, KeyRound, ShieldCheck } from 'lucide-react';
 
 // ── 공통 인풋 컴포넌트 ─────────────────────────────────────────────────────
 function AuthInput({ icon: Icon, type = 'text', value, onChange, placeholder, right }) {
@@ -50,24 +50,25 @@ function Msg({ text, type }) {
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────
-export default function AuthPage({ hasAccount, onLogin, onRegister, onForgot }) {
-    // mode: 'login' | 'register' | 'forgot' | 'reset'
+// mode: 'login' | 'register' | 'forgot' | 'admin' | 'reset'
+export default function AuthPage({ hasAccount, onLogin, onRegister, onForgot, onVerifyAdminCode }) {
     const [mode, setMode] = useState(hasAccount ? 'login' : 'register');
     const [id, setId] = useState('');
     const [pw, setPw] = useState('');
     const [pwConfirm, setPwConfirm] = useState('');
     const [hint, setHint] = useState('');
+    const [adminCode, setAdminCode] = useState('');       // 회원가입용
+    const [adminCodeInput, setAdminCodeInput] = useState(''); // 복구용
     const [newPw, setNewPw] = useState('');
     const [newPwConfirm, setNewPwConfirm] = useState('');
     const [msg, setMsg] = useState({ text: '', type: 'error' });
     const [loading, setLoading] = useState(false);
-    const [forgotInfo, setForgotInfo] = useState(null); // { username, hint }
+    const [forgotInfo, setForgotInfo] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const setErr = (text) => setMsg({ text, type: 'error' });
     const setOk = (text) => setMsg({ text, type: 'success' });
     const clearMsg = () => setMsg({ text: '', type: 'error' });
-
     const go = (m) => { setMode(m); clearMsg(); };
 
     // ── 로그인 ─────────────────────────────────────────────────────────────
@@ -84,21 +85,36 @@ export default function AuthPage({ hasAccount, onLogin, onRegister, onForgot }) 
         if (!id.trim()) return setErr('아이디를 입력해주세요.');
         if (pw.length < 4) return setErr('비밀번호는 4자 이상이어야 합니다.');
         if (pw !== pwConfirm) return setErr('비밀번호가 일치하지 않습니다.');
+        if (!adminCode || adminCode.trim().length < 4) return setErr('관리자 복구 코드는 4자 이상이어야 합니다.');
         setLoading(true);
-        const res = await onRegister(id, pw, hint);
+        const res = await onRegister(id, pw, hint, adminCode);
         setLoading(false);
         if (!res.ok) setErr(res.msg);
     };
 
     // ── 아이디/비밀번호 찾기 ───────────────────────────────────────────────
     const handleForgot = () => {
-        const info = onForgot(); // { username, hint } 반환
+        const info = onForgot();
         if (!info) return setErr('등록된 계정이 없습니다.');
         setForgotInfo(info);
         go('forgot');
     };
 
-    // ── 비밀번호 재설정 제출 ───────────────────────────────────────────────
+    // ── 관리자 복구 코드 검증 ──────────────────────────────────────────────
+    const handleVerifyAdmin = async () => {
+        if (!adminCodeInput.trim()) return setErr('복구 코드를 입력해주세요.');
+        setLoading(true);
+        const res = await onVerifyAdminCode(adminCodeInput);
+        setLoading(false);
+        if (res.ok) {
+            clearMsg();
+            go('reset');
+        } else {
+            setErr(res.msg);
+        }
+    };
+
+    // ── 비밀번호 재설정 ────────────────────────────────────────────────────
     const handleReset = async () => {
         if (newPw.length < 4) return setErr('비밀번호는 4자 이상이어야 합니다.');
         if (newPw !== newPwConfirm) return setErr('비밀번호가 일치하지 않습니다.');
@@ -113,43 +129,44 @@ export default function AuthPage({ hasAccount, onLogin, onRegister, onForgot }) 
         }
     };
 
+    const modeLabel = {
+        login: '로그인하여 운동 일지를 확인하세요',
+        register: '새 계정을 만들어 시작하세요',
+        forgot: '계정 정보 확인',
+        admin: '관리자 복구 코드 입력',
+        reset: '새 비밀번호를 설정하세요',
+    };
+
     return (
         <div className="min-h-screen bg-surface-900 flex flex-col items-center justify-center px-4">
-            {/* 배경 그라데이션 글로우 */}
+            {/* 배경 글로우 */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-violet-600/10 blur-3xl" />
                 <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-indigo-600/8 blur-3xl" />
             </div>
 
             <div className="relative w-full max-w-sm animate-fade-in">
-                {/* 앱 로고 */}
+                {/* 로고 */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-600/20 border border-violet-500/30 mb-4 text-3xl shadow-lg shadow-violet-500/10">
                         🏋️
                     </div>
                     <h1 className="text-white font-bold text-xl tracking-tight">PPL 운동 일지</h1>
-                    <p className="text-white/30 text-xs mt-1">
-                        {mode === 'login' && '로그인하여 운동 일지를 확인하세요'}
-                        {mode === 'register' && '새 계정을 만들어 시작하세요'}
-                        {mode === 'forgot' && '계정 정보 확인'}
-                        {mode === 'reset' && '새 비밀번호를 설정하세요'}
-                    </p>
+                    <p className="text-white/30 text-xs mt-1">{modeLabel[mode]}</p>
                 </div>
 
                 {/* 카드 */}
                 <div className="bg-surface-800 border border-white/8 rounded-3xl p-6 shadow-2xl space-y-4">
 
-                    {/* ── 로그인 모드 ─────────────────────────────────────── */}
+                    {/* ── 로그인 ────────────────────────────────────────── */}
                     {mode === 'login' && (
                         <>
                             <h2 className="text-white font-bold text-base">로그인</h2>
-                            <AuthInput icon={User} value={id} onChange={e => setId(e.target.value)}
-                                placeholder="아이디" />
+                            <AuthInput icon={User} value={id} onChange={e => setId(e.target.value)} placeholder="아이디" />
                             <PwInput value={pw} onChange={e => setPw(e.target.value)} />
                             <Msg {...msg} />
                             <button onClick={handleLogin} disabled={loading}
-                                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50
-                                    text-white font-bold text-sm transition-all active:scale-95 shadow-lg shadow-violet-600/20">
+                                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-bold text-sm transition-all active:scale-95 shadow-lg shadow-violet-600/20">
                                 {loading ? '확인 중...' : '로그인'}
                             </button>
                             <div className="flex items-center justify-between pt-1">
@@ -165,26 +182,37 @@ export default function AuthPage({ hasAccount, onLogin, onRegister, onForgot }) 
                         </>
                     )}
 
-                    {/* ── 회원가입 모드 ────────────────────────────────────── */}
+                    {/* ── 회원가입 ──────────────────────────────────────── */}
                     {mode === 'register' && (
                         <>
                             <h2 className="text-white font-bold text-base">회원가입</h2>
-                            <AuthInput icon={User} value={id} onChange={e => setId(e.target.value)}
-                                placeholder="아이디 (영문·숫자)" />
+                            <AuthInput icon={User} value={id} onChange={e => setId(e.target.value)} placeholder="아이디 (영문·숫자)" />
                             <PwInput value={pw} onChange={e => setPw(e.target.value)} placeholder="비밀번호 (4자 이상)" />
                             <PwInput value={pwConfirm} onChange={e => setPwConfirm(e.target.value)} placeholder="비밀번호 확인" />
+
                             {/* 비밀번호 힌트 */}
                             <div>
                                 <AuthInput icon={Lightbulb} value={hint} onChange={e => setHint(e.target.value)}
                                     placeholder="비밀번호 힌트 (선택 — 예: 내 강아지 이름)" />
-                                <p className="text-white/20 text-[10px] mt-1 pl-1">
-                                    잊어버렸을 때 이 힌트가 표시됩니다. 비밀번호 자체를 쓰지 마세요.
+                                <p className="text-white/20 text-[10px] mt-1 pl-1">잊어버렸을 때 표시되는 힌트예요.</p>
+                            </div>
+
+                            {/* 관리자 복구 코드 */}
+                            <div className="border-t border-white/5 pt-3">
+                                <p className="text-violet-300/70 text-xs mb-2 flex items-center gap-1.5">
+                                    <ShieldCheck size={12} /> 관리자 복구 코드 <span className="text-white/30">(필수)</span>
+                                </p>
+                                <PwInput value={adminCode} onChange={e => setAdminCode(e.target.value)}
+                                    placeholder="복구 코드 (4자 이상, AI에게 알려줄 코드)" />
+                                <p className="text-white/20 text-[10px] mt-1.5 pl-1 leading-relaxed">
+                                    비밀번호를 잊었을 때 AI 대화창에서 이 코드를 사용해 재설정할 수 있어요.<br />
+                                    본인만 아는 단어로 설정하고 기억해두세요.
                                 </p>
                             </div>
+
                             <Msg {...msg} />
                             <button onClick={handleRegister} disabled={loading}
-                                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50
-                                    text-white font-bold text-sm transition-all active:scale-95 shadow-lg shadow-violet-600/20">
+                                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-bold text-sm transition-all active:scale-95 shadow-lg shadow-violet-600/20">
                                 {loading ? '처리 중...' : '계정 만들기'}
                             </button>
                             {hasAccount && (
@@ -196,7 +224,7 @@ export default function AuthPage({ hasAccount, onLogin, onRegister, onForgot }) 
                         </>
                     )}
 
-                    {/* ── 계정 정보 확인 (찾기) 모드 ──────────────────────── */}
+                    {/* ── 계정 정보 확인 ────────────────────────────────── */}
                     {mode === 'forgot' && forgotInfo && (
                         <>
                             <div className="flex items-center gap-2 mb-1">
@@ -207,7 +235,6 @@ export default function AuthPage({ hasAccount, onLogin, onRegister, onForgot }) 
                                 <h2 className="text-white font-bold text-base">계정 정보 확인</h2>
                             </div>
 
-                            {/* 아이디 */}
                             <div className="bg-white/3 border border-white/8 rounded-xl p-4 space-y-3">
                                 <div>
                                     <p className="text-white/30 text-xs mb-1">등록된 아이디</p>
@@ -225,38 +252,72 @@ export default function AuthPage({ hasAccount, onLogin, onRegister, onForgot }) 
 
                             <Msg {...msg} />
 
-                            <button onClick={() => go('reset')}
-                                className="w-full py-3 rounded-xl bg-violet-600/80 hover:bg-violet-600 text-white font-bold text-sm transition-all">
-                                비밀번호 재설정
+                            {/* ★ 관리자 복구 코드로 재설정 */}
+                            <button onClick={() => { clearMsg(); go('admin'); }}
+                                className="w-full py-3 rounded-xl bg-violet-600/80 hover:bg-violet-600 text-white font-bold text-sm transition-all flex items-center justify-center gap-2">
+                                <ShieldCheck size={15} /> 관리자 복구 코드로 재설정
                             </button>
 
-                            {/* 긴급 초기화 */}
-                            <div className="border-t border-white/5 pt-3">
-                                {!showDeleteConfirm ? (
-                                    <button onClick={() => setShowDeleteConfirm(true)}
-                                        className="w-full text-rose-500/60 hover:text-rose-400 text-xs transition-colors flex items-center justify-center gap-1">
-                                        <AlertTriangle size={11} /> 모든 데이터 삭제 후 초기화
-                                    </button>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <p className="text-rose-400/80 text-xs text-center">정말로 모든 운동 기록을 삭제할까요?</p>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => onForgot('deleteAll')}
-                                                className="flex-1 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 text-xs font-bold transition-all">
-                                                삭제 및 초기화
-                                            </button>
-                                            <button onClick={() => setShowDeleteConfirm(false)}
-                                                className="flex-1 py-2 rounded-xl bg-white/5 text-white/40 text-xs font-bold">
-                                                취소
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
+                            <div className="flex items-center gap-2">
+                                <div className="flex-1 border-t border-white/5" />
+                                <span className="text-white/20 text-[10px]">또는</span>
+                                <div className="flex-1 border-t border-white/5" />
                             </div>
+
+                            {/* 긴급 초기화 */}
+                            {!showDeleteConfirm ? (
+                                <button onClick={() => setShowDeleteConfirm(true)}
+                                    className="w-full text-rose-500/60 hover:text-rose-400 text-xs transition-colors flex items-center justify-center gap-1">
+                                    <AlertTriangle size={11} /> 모든 데이터 삭제 후 초기화
+                                </button>
+                            ) : (
+                                <div className="space-y-2">
+                                    <p className="text-rose-400/80 text-xs text-center">정말로 모든 운동 기록을 삭제할까요?</p>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => onForgot('deleteAll')}
+                                            className="flex-1 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 text-xs font-bold transition-all">
+                                            삭제 및 초기화
+                                        </button>
+                                        <button onClick={() => setShowDeleteConfirm(false)}
+                                            className="flex-1 py-2 rounded-xl bg-white/5 text-white/40 text-xs font-bold">
+                                            취소
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </>
                     )}
 
-                    {/* ── 비밀번호 재설정 모드 ─────────────────────────────── */}
+                    {/* ── 관리자 복구 코드 입력 ─────────────────────────── */}
+                    {mode === 'admin' && (
+                        <>
+                            <div className="flex items-center gap-2 mb-1">
+                                <button onClick={() => go('forgot')}
+                                    className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
+                                    <ArrowLeft size={13} />
+                                </button>
+                                <h2 className="text-white font-bold text-base">관리자 복구 코드</h2>
+                            </div>
+
+                            <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl p-3">
+                                <p className="text-violet-300/80 text-xs leading-relaxed">
+                                    AI 대화창에서<br />
+                                    <span className="font-bold text-violet-300">"비밀번호 초기화해줘"</span>라고 요청하면<br />
+                                    관리자가 복구 코드를 확인 후 알려드립니다.
+                                </p>
+                            </div>
+
+                            <PwInput value={adminCodeInput} onChange={e => setAdminCodeInput(e.target.value)}
+                                placeholder="관리자 복구 코드 입력" />
+                            <Msg {...msg} />
+                            <button onClick={handleVerifyAdmin} disabled={loading}
+                                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-bold text-sm transition-all active:scale-95">
+                                {loading ? '확인 중...' : '코드 확인'}
+                            </button>
+                        </>
+                    )}
+
+                    {/* ── 비밀번호 재설정 ───────────────────────────────── */}
                     {mode === 'reset' && (
                         <>
                             <div className="flex items-center gap-2 mb-1">
@@ -270,8 +331,7 @@ export default function AuthPage({ hasAccount, onLogin, onRegister, onForgot }) 
                             <PwInput value={newPwConfirm} onChange={e => setNewPwConfirm(e.target.value)} placeholder="새 비밀번호 확인" />
                             <Msg {...msg} />
                             <button onClick={handleReset} disabled={loading}
-                                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50
-                                    text-white font-bold text-sm transition-all active:scale-95">
+                                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-bold text-sm transition-all active:scale-95">
                                 {loading ? '처리 중...' : '비밀번호 변경'}
                             </button>
                         </>
