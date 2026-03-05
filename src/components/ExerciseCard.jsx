@@ -8,19 +8,19 @@ function OverloadBadge({ current, prev }) {
     if (!prev || prev === 0 || current === 0) return null;
     const pct = Math.round(((current - prev) / prev) * 100);
     if (pct > 0) return (
-        <span title={`이전 주 대비 +${pct}% 볼륨 증가`}
+        <span title={`직전 같은 루틴 대비 +${pct}% 볼륨 증가`}
             className="text-xs px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold">
             ▲ {pct}%
         </span>
     );
     if (pct < 0) return (
-        <span title={`이전 주 대비 ${Math.abs(pct)}% 볼륨 감소`}
+        <span title={`직전 같은 루틴 대비 ${Math.abs(pct)}% 볼륨 감소`}
             className="text-xs px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-semibold">
             ▼ {Math.abs(pct)}%
         </span>
     );
     return (
-        <span title="이전 주와 동일한 볼륨"
+        <span title="직전 같은 루틴과 동일한 볼륨"
             className="text-xs px-1.5 py-0.5 rounded-full bg-white/10 text-white/40">
             — 유지
         </span>
@@ -83,15 +83,17 @@ const TYPE_LABELS = {
 };
 
 export default function ExerciseCard({
-    ex, dayId, weekKey, prevWeekKey, getLog, updateSet, onUpdateEx, onRemove, color,
+    ex, dayId,
+    dateStr, prevDateStr,          // ★ weekKey/prevWeekKey → dateStr/prevDateStr
+    getLog, updateSet, onUpdateEx, onRemove, color,
 }) {
     const [expanded, setExpanded] = useState(true);
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState({ name: ex.name, sets: ex.sets, reps: ex.reps });
 
     const c = COLOR_MAP[color];
-    const logData = getLog(weekKey, dayId)[ex.id] ?? [];
-    const prevData = getLog(prevWeekKey, dayId)[ex.id] ?? [];
+    const logData = getLog(dateStr, dayId)[ex.id] ?? [];
+    const prevData = prevDateStr ? (getLog(prevDateStr, dayId)[ex.id] ?? []) : [];
     const currVol = calcVolume(logData);
     const prevVol = calcVolume(prevData);
 
@@ -186,7 +188,7 @@ export default function ExerciseCard({
                     {sets.map((s, i) => (
                         <SetRow
                             key={i} setIdx={i} data={s} color={color}
-                            onChange={(field, val) => updateSet(weekKey, dayId, ex.id, i, field, val)}
+                            onChange={(field, val) => updateSet(dateStr, dayId, ex.id, i, field, val)}
                         />
                     ))}
                 </div>

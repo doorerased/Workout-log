@@ -7,7 +7,9 @@ import TipDrawer from './TipDrawer';
 import ProgressPanel from './ProgressPanel';
 
 export default function DayView({
-    day, weekKey, prevWeekKey,
+    day,
+    dateStr,       // ★ "YYYY-MM-DD" — 이 날짜의 일지
+    prevDateStr,   // ★ 같은 dayId를 사용한 직전 날짜 (과부하 비교용)
     getRoutine, updateRoutine, resetRoutine, isCustomized,
     getLog, updateSet,
 }) {
@@ -52,7 +54,9 @@ export default function DayView({
                             <span className={`text-xs font-bold uppercase tracking-widest ${c.text}`}>{day.theme}</span>
                         </div>
                         <h2 className="text-white font-bold text-xl">{day.label}</h2>
-                        <p className="text-white/40 text-xs mt-0.5">{exercises.length}개 종목 · {totalSets}총 세트</p>
+                        <p className="text-white/40 text-xs mt-0.5">
+                            {dateStr} · {exercises.length}개 종목 · {totalSets}총 세트
+                        </p>
                     </div>
                     {isCustomized(day.id) && (
                         <button onClick={() => resetRoutine(day.id)} title="기본 루틴으로 초기화"
@@ -66,7 +70,7 @@ export default function DayView({
                 {exercises.map(ex => (
                     <ExerciseCard
                         key={ex.id} ex={ex} dayId={day.id}
-                        weekKey={weekKey} prevWeekKey={prevWeekKey}
+                        dateStr={dateStr} prevDateStr={prevDateStr}
                         getLog={getLog} updateSet={updateSet} color={day.color}
                         onUpdateEx={updateEx} onRemove={() => removeEx(ex.id)}
                     />
@@ -89,8 +93,12 @@ export default function DayView({
 
                 {showProgress && (
                     <ProgressPanel
-                        dayId={day.id} weekKey={weekKey} prevWeekKey={prevWeekKey}
-                        getRoutine={getRoutine} getLog={getLog} color={day.color}
+                        dayId={day.id}
+                        dateStr={dateStr}
+                        prevDateStr={prevDateStr}
+                        getRoutine={getRoutine}
+                        getLog={getLog}
+                        color={day.color}
                     />
                 )}
 

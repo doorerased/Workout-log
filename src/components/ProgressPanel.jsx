@@ -10,15 +10,16 @@ function OverloadBadge({ current, prev }) {
     return <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/10 text-white/40">— 유지</span>;
 }
 
-export default function ProgressPanel({ dayId, weekKey, prevWeekKey, getRoutine, getLog, color }) {
+// ★ dateStr/prevDateStr 기반 — 같은 루틴의 직전 날짜와 볼륨 비교
+export default function ProgressPanel({ dayId, dateStr, prevDateStr, getRoutine, getLog, color }) {
     const c = COLOR_MAP[color];
     const exercises = getRoutine(dayId);
 
     const rows = exercises
         .map(ex => ({
             name: ex.name,
-            curr: calcVolume(getLog(weekKey, dayId)[ex.id] ?? []),
-            prev: calcVolume(getLog(prevWeekKey, dayId)[ex.id] ?? []),
+            curr: calcVolume(getLog(dateStr, dayId)[ex.id] ?? []),
+            prev: prevDateStr ? calcVolume(getLog(prevDateStr, dayId)[ex.id] ?? []) : 0,
         }))
         .filter(r => r.curr > 0 || r.prev > 0);
 
@@ -36,6 +37,13 @@ export default function ProgressPanel({ dayId, weekKey, prevWeekKey, getRoutine,
                 <span className="text-xs text-white/30 ml-auto">볼륨 = 세트 × 반복 × 중량</span>
             </div>
 
+            {/* 비교 기준 날짜 표시 */}
+            {prevDateStr && (
+                <div className="px-4 pt-2 pb-0">
+                    <p className="text-white/25 text-xs">직전 {dayId.replace(/\d/, '')} 루틴 날짜: {prevDateStr}</p>
+                </div>
+            )}
+
             <div className="divide-y divide-white/5">
                 {rows.map((r, i) => {
                     const maxVol = Math.max(r.curr, r.prev, 1);
@@ -47,9 +55,9 @@ export default function ProgressPanel({ dayId, weekKey, prevWeekKey, getRoutine,
                             </div>
 
                             <div className="space-y-2">
-                                {/* 이번 주 */}
+                                {/* 오늘 */}
                                 <div className="flex items-center gap-2">
-                                    <span className="text-white/30 text-xs w-12 text-right flex-shrink-0">이번 주</span>
+                                    <span className="text-white/30 text-xs w-12 text-right flex-shrink-0">오늘</span>
                                     <div className="flex-1 bg-white/5 rounded-full h-1.5 overflow-hidden">
                                         <div
                                             className={`h-full ${c.btn} rounded-full transition-all duration-700`}
@@ -60,9 +68,9 @@ export default function ProgressPanel({ dayId, weekKey, prevWeekKey, getRoutine,
                                         {r.curr > 0 ? r.curr.toLocaleString() : '-'}
                                     </span>
                                 </div>
-                                {/* 지난 주 */}
+                                {/* 직전 같은 루틴 */}
                                 <div className="flex items-center gap-2">
-                                    <span className="text-white/30 text-xs w-12 text-right flex-shrink-0">지난 주</span>
+                                    <span className="text-white/30 text-xs w-12 text-right flex-shrink-0">직전</span>
                                     <div className="flex-1 bg-white/5 rounded-full h-1.5 overflow-hidden">
                                         <div
                                             className="h-full bg-white/25 rounded-full transition-all duration-700"
